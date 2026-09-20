@@ -10,6 +10,8 @@ export interface ArAdapter {
   trackingState: TrackingState
   /** Реальные точки поверхности (feature points SLAM) под экранной точкой (px). Пусто — точек нет. */
   hitTestPoints(clientX: number, clientY: number): THREE.Vector3[]
+  /** Диагностика PoC: какие типы hit-test реально отдаёт движок в центре экрана. */
+  probeHitTypes?(): string
   /** Колбэк на каждый кадр, dt в секундах. */
   onFrame(cb: (dt: number) => void): void
   onTracking(cb: (s: TrackingState) => void): void

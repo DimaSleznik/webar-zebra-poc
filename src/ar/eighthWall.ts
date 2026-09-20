@@ -87,6 +87,15 @@ export async function startEighthWall(
               const hits = XR8.XrController.hitTest(x / innerWidth, y / innerHeight, ['FEATURE_POINT']) ?? []
               return hits.map((h: any) => new THREE.Vector3(h.position.x, h.position.y, h.position.z))
             },
+            probeHitTypes: () => {
+              // В доке заявлен только FEATURE_POINT; проверяем, приходят ли *_SURFACE в бинаре 1.0.0
+              const count = (types: string[]) => {
+                const by: Record<string, number> = {}
+                for (const h of XR8.XrController.hitTest(0.5, 0.5, types) ?? []) by[h.type] = (by[h.type] ?? 0) + 1
+                return Object.entries(by).map(([t, n]) => `${t[0]}${n}`).join(' ') || '—'
+              }
+              return `все: ${count([])} · surf: ${count(['ESTIMATED_SURFACE', 'DETECTED_SURFACE'])}`
+            },
             onFrame: (cb) => frameCbs.push(cb),
             onTracking: (cb) => trackingCbs.push(cb),
           }

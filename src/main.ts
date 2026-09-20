@@ -63,8 +63,10 @@ async function run(ar: ArAdapter) {
     surface.setActive(true)
   }
   // Пока персонаж не поставлен, подсказка показывает, найдена ли реальная поверхность
+  let probeFrame = 0
   ar.onFrame(() => {
     if (game.placed) return
+    if (ar.probeHitTypes && probeFrame++ % 30 === 0) trackingEl.textContent = ar.probeHitTypes()
     hint.textContent =
       surface.kind === 'points'
         ? `Поверхность найдена (точек: ${surface.samples}) — тапните`
