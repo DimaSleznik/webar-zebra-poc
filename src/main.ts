@@ -18,7 +18,10 @@ const win = $('win')
 const scale = $<HTMLInputElement>('scale')
 
 // ?ar=mock — режим для ПК; по умолчанию 8th Wall SLAM
-const mode = new URLSearchParams(location.search).get('ar') ?? '8w'
+const params = new URLSearchParams(location.search)
+const mode = params.get('ar') ?? '8w'
+// ?scale=absolute — метрический масштаб 8th Wall (1 ед. = 1 м); трекинг стартует после движения телефоном
+const arScale = params.get('scale') === 'absolute' ? 'absolute' : 'responsive'
 
 const TRACKING_TEXT: Record<TrackingState, string> = {
   initializing: 'Трекинг: запуск…',
@@ -31,7 +34,7 @@ startBtn.addEventListener('click', async () => {
   splashStatus.textContent = 'Загрузка движка и камеры…'
   try {
     const t0 = performance.now()
-    const ar: ArAdapter = mode === 'mock' ? startMock(canvas) : await startEighthWall(canvas)
+    const ar: ArAdapter = mode === 'mock' ? startMock(canvas) : await startEighthWall(canvas, arScale)
     console.info(`[poc] AR (${mode}) готов за ${Math.round(performance.now() - t0)} мс`)
     await run(ar)
   } catch (e) {
@@ -60,11 +63,17 @@ async function run(ar: ArAdapter) {
 
   canvas.addEventListener('click', (e) => {
     if (game.placed) return
-    const p = ar.hitTestFloor(e.clientX, e.clientY)
-    if (!p) return
-    game.placeAt(p)
-    hint.textContent = ''
+    const hit = ar.hitTestFloor(e.clientX, e.clientY)
+    if (!hit) return
+    game.placeAt(hit.point)
+    hint.textContent = hit.kind === 'points' ? 'Поставлено по точкам поверхности' : 'Поставлено по условной плоскости'
+    setTimeout(() => game.placed && (hint.textContent = ''), 2500)
   })
+  const about = $<HTMLDialogElement>('about')
+  $('about-btn').addEventListener('click', () => about.showModal())
+  $('about-close').addEventListener('click', () => about.close())
+  // В метрическом режиме персонаж ростом 1 ед. = 1 м, поэтому по умолчанию 15 см
+  if (arScale === 'absolute' && mode !== 'mock') scale.value = '0.15'
   $('replace-btn').addEventListener('click', askPlace)
   $('again-btn').addEventListener('click', () => {
     win.hidden = true

@@ -29,12 +29,19 @@
       <div id="bottom-bar">
         <div id="joystick"><div id="stick"></div></div>
         <div id="side-controls">
-          <label>Размер<input id="scale" type="range" min="0.2" max="4" step="0.05" value="0.6" /></label>
+          <label>Размер<input id="scale" type="range" min="0.05" max="4" step="0.05" value="0.6" /></label>
           <button id="replace-btn">Переставить</button>
         </div>
       </div>
-      <a id="attribution" href="./xr/LICENSE" target="_blank" rel="noopener">Powered by 8th Wall · Niantic Spatial</a>
+      <button id="about-btn" aria-label="О приложении">i</button>
     </section>
+
+    <dialog id="about">
+      <h2>О приложении</h2>
+      <p>AR-движок: 8th Wall Engine, создатель — Niantic Spatial, Inc. © Niantic Spatial, Inc. Используется по <a href="./xr/LICENSE" target="_blank" rel="noopener">XR Engine License Agreement</a>; движок предоставляется «как есть», без гарантий (см. раздел лицензии об отказе от гарантий).</p>
+      <p>Модель RobotExpressive — Tomás Laulhé, CC0. three.js — MIT.</p>
+      <button id="about-close" class="primary">Закрыть</button>
+    </dialog>
 
     <script type="module" src="./src/main.ts"></script>
   </body>

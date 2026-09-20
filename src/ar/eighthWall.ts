@@ -27,7 +27,10 @@ function loadEngine(): Promise<any> {
 }
 
 /** Запускать из обработчика тапа: iOS даёт запросить датчики движения только по жесту. */
-export async function startEighthWall(canvas: HTMLCanvasElement): Promise<ArAdapter> {
+export async function startEighthWall(
+  canvas: HTMLCanvasElement,
+  scale: 'responsive' | 'absolute',
+): Promise<ArAdapter> {
   // XR8.Threejs.pipelineModule() берёт three из window.THREE
   window.THREE = THREE
   const XR8 = await loadEngine()
@@ -59,7 +62,7 @@ export async function startEighthWall(canvas: HTMLCanvasElement): Promise<ArAdap
     addEventListener('resize', fitCanvas)
     addEventListener('orientationchange', () => setTimeout(fitCanvas, 300))
 
-    XR8.XrController.configure({ scale: 'responsive' })
+    XR8.XrController.configure({ scale })
     XR8.addCameraPipelineModules([
       { name: 'poc-fullwindow', onStart: fitCanvas, onUpdate: fitCanvas },
       XR8.GlTextureRenderer.pipelineModule(),
@@ -80,7 +83,15 @@ export async function startEighthWall(canvas: HTMLCanvasElement): Promise<ArAdap
             camera,
             renderer,
             trackingState: 'initializing',
-            hitTestFloor: (x, y) => raycastFloor(camera, x, y),
+            hitTestFloor: (x, y) => {
+              // Сначала реальные точки поверхности из SLAM, иначе условная плоскость y=0
+              const hits = XR8.XrController.hitTest(x / innerWidth, y / innerHeight, ['FEATURE_POINT'])
+              if (hits?.length) {
+                const p = hits[0].position
+                return { point: new THREE.Vector3(p.x, p.y, p.z), kind: 'points' }
+              }
+              return raycastFloor(camera, x, y)
+            },
             onFrame: (cb) => frameCbs.push(cb),
             onTracking: (cb) => trackingCbs.push(cb),
           }

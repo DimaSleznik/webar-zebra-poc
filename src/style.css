@@ -60,7 +60,13 @@ button:disabled { opacity: .5; }
 }
 #scale { width: 140px; }
 
-#attribution {
-  position: absolute; bottom: calc(8px + env(safe-area-inset-bottom)); left: 0; right: 0;
-  text-align: center; font-size: 11px; color: rgba(255, 255, 255, .8); text-decoration: none; text-shadow: 0 1px 3px #000;
+#about-btn {
+  position: absolute; top: calc(52px + env(safe-area-inset-top)); right: 12px;
+  width: 28px; height: 28px; padding: 0; font-size: 14px; font-style: italic; opacity: .7;
 }
+#about {
+  border: 0; border-radius: 20px; padding: 24px; max-width: 320px; color: #123; font-size: 14px; line-height: 1.4;
+  user-select: text; -webkit-user-select: text;
+}
+#about h2 { margin: 0 0 12px; font-size: 18px; }
+#about::backdrop { background: rgba(0, 0, 0, .6); }
