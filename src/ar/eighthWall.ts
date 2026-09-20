@@ -44,8 +44,24 @@ export async function startEighthWall(canvas: HTMLCanvasElement): Promise<ArAdap
       trackingCbs.forEach((cb) => cb(s))
     }
 
+    // Аналог XRExtras.FullWindowCanvas: буфер канваса = окно × dpr.
+    // Движок сам замечает смену размера и шлёт onCanvasSizeChange остальным модулям.
+    const fitCanvas = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2)
+      const w = Math.round(innerWidth * dpr)
+      const h = Math.round(innerHeight * dpr)
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w
+        canvas.height = h
+      }
+    }
+    fitCanvas()
+    addEventListener('resize', fitCanvas)
+    addEventListener('orientationchange', () => setTimeout(fitCanvas, 300))
+
     XR8.XrController.configure({ scale: 'responsive' })
     XR8.addCameraPipelineModules([
+      { name: 'poc-fullwindow', onStart: fitCanvas, onUpdate: fitCanvas },
       XR8.GlTextureRenderer.pipelineModule(),
       XR8.Threejs.pipelineModule(),
       XR8.XrController.pipelineModule(),
