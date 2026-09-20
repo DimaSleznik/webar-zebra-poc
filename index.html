@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>WebAR PoC</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <canvas id="ar-canvas"></canvas>
+
+    <section id="splash" class="screen">
+      <h1>WebAR PoC</h1>
+      <p>Собери монеты на столе. Нужны камера и датчики движения.</p>
+      <button id="start-btn" class="primary">Начать</button>
+      <p id="splash-status" class="muted"></p>
+    </section>
+
+    <section id="hud" hidden>
+      <div id="top-bar">
+        <div id="score">🪙 0 / 0</div>
+        <div id="tracking" class="pill"></div>
+      </div>
+      <div id="hint" class="pill"></div>
+      <div id="win" hidden>
+        <div>Все монеты собраны!</div>
+        <button id="again-btn" class="primary">Ещё раз</button>
+      </div>
+      <div id="bottom-bar">
+        <div id="joystick"><div id="stick"></div></div>
+        <div id="side-controls">
+          <label>Размер<input id="scale" type="range" min="0.2" max="4" step="0.05" value="0.6" /></label>
+          <button id="replace-btn">Переставить</button>
+        </div>
+      </div>
+      <a id="attribution" href="./xr/LICENSE" target="_blank" rel="noopener">Powered by 8th Wall · Niantic Spatial</a>
+    </section>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
