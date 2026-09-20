@@ -44,7 +44,10 @@ export function startMock(canvas: HTMLCanvasElement): ArAdapter {
     camera,
     renderer,
     trackingState: 'normal',
-    hitTestFloor: (x, y) => raycastFloor(camera, x, y),
+    hitTestPoints: (x, y) => {
+      const p = raycastFloor(camera, x, y)
+      return p ? [p] : []
+    },
     onFrame: (cb) => frameCbs.push(cb),
     onTracking: () => {},
   }

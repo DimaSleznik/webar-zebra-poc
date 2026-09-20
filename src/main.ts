@@ -3,6 +3,7 @@ import { startMock } from './ar/mock'
 import type { ArAdapter, TrackingState } from './ar/types'
 import { createGame } from './game'
 import { createJoystick } from './joystick'
+import { createSurfaceReticle } from './surface'
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 
@@ -55,19 +56,30 @@ async function run(ar: ArAdapter) {
   showTracking(ar.trackingState)
   ar.onTracking(showTracking)
 
+  const surface = createSurfaceReticle(ar)
   const askPlace = () => {
     game.unplace()
     win.hidden = true
-    hint.textContent = 'Наведите на стол и тапните'
+    surface.setActive(true)
   }
-
-  canvas.addEventListener('click', (e) => {
+  // Пока персонаж не поставлен, подсказка показывает, найдена ли реальная поверхность
+  ar.onFrame(() => {
     if (game.placed) return
-    const hit = ar.hitTestFloor(e.clientX, e.clientY)
-    if (!hit) return
-    game.placeAt(hit.point)
-    hint.textContent = hit.kind === 'points' ? 'Поставлено по точкам поверхности' : 'Поставлено по условной плоскости'
-    setTimeout(() => game.placed && (hint.textContent = ''), 2500)
+    hint.textContent =
+      surface.kind === 'points'
+        ? `Поверхность найдена (точек: ${surface.samples}) — тапните`
+        : 'Поводите телефоном над столом…'
+  })
+
+  canvas.addEventListener('click', () => {
+    if (game.placed) return
+    const p = surface.point
+    if (!p) return
+    console.info(`[poc] размещение: ${surface.kind}, выборка ${surface.samples}, y=${p.y.toFixed(3)}`)
+    game.placeAt(p)
+    surface.setActive(false)
+    hint.textContent = surface.kind === 'points' ? '' : 'Поставлено без точек поверхности — высота может не совпасть'
+    setTimeout(() => game.placed && (hint.textContent = ''), 3000)
   })
   const about = $<HTMLDialogElement>('about')
   $('about-btn').addEventListener('click', () => about.showModal())
@@ -79,8 +91,12 @@ async function run(ar: ArAdapter) {
     win.hidden = true
     game.reset()
   })
-  scale.addEventListener('input', () => game.setScale(+scale.value))
-  game.setScale(+scale.value)
+  const applyScale = () => {
+    game.setScale(+scale.value)
+    surface.setRadius(+scale.value * 0.5)
+  }
+  scale.addEventListener('input', applyScale)
+  applyScale()
 
   splash.hidden = true
   splash.style.display = 'none'

@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { raycastFloor, type ArAdapter, type TrackingState } from './types'
+import type { ArAdapter, TrackingState } from './types'
 
 // XR8 — закрытый бинарь без типов
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -83,14 +83,9 @@ export async function startEighthWall(
             camera,
             renderer,
             trackingState: 'initializing',
-            hitTestFloor: (x, y) => {
-              // Сначала реальные точки поверхности из SLAM, иначе условная плоскость y=0
-              const hits = XR8.XrController.hitTest(x / innerWidth, y / innerHeight, ['FEATURE_POINT'])
-              if (hits?.length) {
-                const p = hits[0].position
-                return { point: new THREE.Vector3(p.x, p.y, p.z), kind: 'points' }
-              }
-              return raycastFloor(camera, x, y)
+            hitTestPoints: (x, y) => {
+              const hits = XR8.XrController.hitTest(x / innerWidth, y / innerHeight, ['FEATURE_POINT']) ?? []
+              return hits.map((h: any) => new THREE.Vector3(h.position.x, h.position.y, h.position.z))
             },
             onFrame: (cb) => frameCbs.push(cb),
             onTracking: (cb) => trackingCbs.push(cb),
