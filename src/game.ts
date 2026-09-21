@@ -117,18 +117,25 @@ export async function createGame(ar: ArAdapter, input: { x: number; y: number },
     }
   })
 
+  let placed = false
+  let started = false
+
   return {
     get placed() {
-      return world.visible
+      return placed
     },
+    /** Перестановка сохраняет счёт и монеты: сбрасываем только при первом размещении. */
     placeAt(p: THREE.Vector3) {
       world.position.copy(p)
-      if (!world.visible) reset()
-      world.visible = true
-      t = 0
+      if (!started) reset()
+      started = placed = world.visible = true
     },
     unplace() {
-      world.visible = false
+      placed = world.visible = false
+    },
+    /** Скрыть сцену, не снимая размещения: при потере трекинга она «приклеивается» к камере. */
+    setSuspended(on: boolean) {
+      if (placed) world.visible = !on
     },
     setScale(s: number) {
       world.scale.setScalar(s)

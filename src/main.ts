@@ -60,19 +60,50 @@ async function run(ar: ArAdapter) {
     onWin: () => (win.hidden = false),
   })
 
-  const showTracking = (s: TrackingState) => (trackingEl.textContent = TRACKING_TEXT[s])
+  const surface = createSurfaceReticle(ar)
+
+  // Потеря трекинга: SLAM откатывается на гироскоп, и сцена едет вместе с камерой.
+  // Прячем сцену; если потеря дольше RELOCALIZE_MS, карта, скорее всего, пересоздана — просим поставить заново.
+  const RELOCALIZE_MS = 2500
+  let lostAt = 0
+  const showTracking = (s: TrackingState) => {
+    trackingEl.textContent = TRACKING_TEXT[s]
+    if (!game.placed) return
+    if (s !== 'normal') {
+      lostAt ||= performance.now()
+      game.setSuspended(true)
+      hint.textContent = 'Трекинг потерян — наведите на стол и двигайте телефон медленнее'
+    } else {
+      const lostFor = lostAt ? performance.now() - lostAt : 0
+      lostAt = 0
+      console.info(`[poc] трекинг восстановлен через ${Math.round(lostFor)} мс`)
+      if (lostFor > RELOCALIZE_MS) askPlace()
+      else {
+        game.setSuspended(false)
+        hint.textContent = ''
+      }
+    }
+  }
   showTracking(ar.trackingState)
   ar.onTracking(showTracking)
 
-  const surface = createSurfaceReticle(ar)
-  const askPlace = () => {
+  function askPlace() {
     game.unplace()
     win.hidden = true
     surface.setActive(true)
   }
   // Пока персонаж не поставлен, подсказка показывает, найдена ли реальная поверхность
   let probeFrame = 0
+  let fpsFrames = 0
+  let fpsT0 = performance.now()
   ar.onFrame(() => {
+    // FPS для диагностики нагрузки: показываем, когда персонаж стоит и трекинг в норме
+    if (++fpsFrames === 30) {
+      const now = performance.now()
+      if (game.placed && ar.trackingState === 'normal') trackingEl.textContent = `${Math.round(30000 / (now - fpsT0))} fps`
+      fpsFrames = 0
+      fpsT0 = now
+    }
     if (game.placed) return
     if (ar.probeHitTypes && probeFrame++ % 30 === 0) trackingEl.textContent = ar.probeHitTypes()
     hint.textContent =
