@@ -32,8 +32,16 @@ const TRACKING_TEXT: Record<TrackingState, string> = {
 
 startBtn.addEventListener('click', async () => {
   startBtn.disabled = true
-  splashStatus.textContent = 'Загрузка движка и камеры…'
   try {
+    // iOS: датчики запрашиваем сами и первым же вызовом, пока жив жест тапа.
+    // Иначе 8th Wall после загрузки покажет свой английский промпт «AR requires access…».
+    const dme = window.DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> } | undefined
+    if (mode !== 'mock' && typeof dme?.requestPermission === 'function') {
+      if ((await dme.requestPermission()) !== 'granted') {
+        throw new Error('нет доступа к датчикам движения. Разрешите его и обновите страницу')
+      }
+    }
+    splashStatus.textContent = 'Загрузка движка и камеры…'
     const t0 = performance.now()
     const ar: ArAdapter = mode === 'mock' ? startMock(canvas) : await startEighthWall(canvas, arScale)
     console.info(`[poc] AR (${mode}) готов за ${Math.round(performance.now() - t0)} мс`)
